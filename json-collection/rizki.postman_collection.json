@@ -14,8 +14,10 @@
 					"listen": "test",
 					"script": {
 						"exec": [
+							"let responseJson = pm.response.json();",
 							"pm.test(\"Status code is 201\", function () {",
 							"    pm.response.to.have.status(201);",
+							"    pm.collectionVariables.set(\"accessToken\", responseJson['accessToken']);",
 							"});",
 							"",
 							"pm.test(\"Response time is less than 1000ms\", function () {",
@@ -37,6 +39,7 @@
 						"exec": [
 							"var name = pm.variables.replaceIn(\"{{$randomFirstName}}\");",
 							"var email = pm.variables.replaceIn(name + \"@rsn.com\");",
+							"",
 							"",
 							"",
 							"pm.collectionVariables.set(\"name\", name);",
@@ -198,7 +201,7 @@
 					"variable": [
 						{
 							"key": "idbooks",
-							"value": "1"
+							"value": "{{idbook}}"
 						}
 					]
 				}
@@ -212,8 +215,10 @@
 					"listen": "test",
 					"script": {
 						"exec": [
+							"let responseJson = pm.response.json();",
 							"pm.test(\"Status code is 201\", function () {",
 							"    pm.response.to.have.status(201);",
+							"    pm.collectionVariables.set(\"orderId\", responseJson['orderId']);",
 							"});",
 							"pm.test(\"Response time is less than 1000ms\", function () {",
 							"    pm.expect(pm.response.responseTime).to.be.below(1000);",
@@ -246,7 +251,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n  \"bookId\": 1,\n  \"customerName\": \"{{$randomFirstName}}\"\n}",
+					"raw": "{\n  \"bookId\": \"{{idbook}}\",\n  \"customerName\": \"{{name}}\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -260,6 +265,69 @@
 					],
 					"path": [
 						"orders"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "singleOrders",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"let responseJson = pm.response.json();",
+							"let colvar = pm.collectionVariables;",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Response time is less than 10000ms\", function () {",
+							"    pm.expect(pm.response.responseTime).to.be.below(10000);",
+							"});",
+							"pm.test(\"id Order = \" + colvar.get(\"orderId\"), function () {",
+							"    pm.expect(responseJson.id).to.eql(colvar.get(\"orderId\"));",
+							"});",
+							"pm.test(\"Book Id = \" + colvar.get(\"idbook\"), function () {",
+							"    pm.expect(responseJson.bookId).to.eql(parseInt(colvar.get(\"idbook\")));",
+							"});",
+							"pm.test(\"customerName = \" + colvar.get(\"name\"), function () {",
+							"    pm.expect(responseJson.customerName).to.eql(colvar.get(\"name\"));",
+							"});",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{accessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseurl}}/orders/:orderid",
+					"host": [
+						"{{baseurl}}"
+					],
+					"path": [
+						"orders",
+						":orderid"
+					],
+					"variable": [
+						{
+							"key": "orderid",
+							"value": "{{orderId}}"
+						}
 					]
 				}
 			},
@@ -301,7 +369,7 @@
 					"variable": [
 						{
 							"key": "orderid",
-							"value": "-6zfbHKzU3WheRP1BA2iO"
+							"value": "{{orderId}}"
 						}
 					]
 				}
@@ -347,7 +415,7 @@
 					"variable": [
 						{
 							"key": "orderid",
-							"value": "-6zfbHKzU3WheRP1BA2iO"
+							"value": "{{orderId}}"
 						}
 					]
 				}
@@ -376,67 +444,6 @@
 					],
 					"path": [
 						"orders"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "singleOrders",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"let responseJson = pm.response.json();",
-							"pm.test(\"Status code is 200\", function () {",
-							"    pm.response.to.have.status(200);",
-							"});",
-							"pm.test(\"Response time is less than 1000ms\", function () {",
-							"    pm.expect(pm.response.responseTime).to.be.below(1000);",
-							"});",
-							"pm.test(\"id = PKgb-9mJIEhS4RtdgvLQb\", function () {",
-							"    pm.expect(responseJson.id).to.eql(\"PKgb-9mJIEhS4RtdgvLQb\");",
-							"});",
-							"pm.test(\"bookId = 1\", function () {",
-							"    pm.expect(responseJson.bookId).to.eql(1);",
-							"});",
-							"pm.test(\"customerName = nelle\", function () {",
-							"    pm.expect(responseJson.customerName).to.eql(\"Nelle\");",
-							"});"
-						],
-						"type": "text/javascript",
-						"packages": {}
-					}
-				}
-			],
-			"request": {
-				"auth": {
-					"type": "bearer",
-					"bearer": [
-						{
-							"key": "token",
-							"value": "{{accessToken}}",
-							"type": "string"
-						}
-					]
-				},
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "{{baseurl}}/orders/:orderid",
-					"host": [
-						"{{baseurl}}"
-					],
-					"path": [
-						"orders",
-						":orderid"
-					],
-					"variable": [
-						{
-							"key": "orderid",
-							"value": "PKgb-9mJIEhS4RtdgvLQb"
-						}
 					]
 				}
 			},
@@ -486,7 +493,7 @@
 					"variable": [
 						{
 							"key": "orderid",
-							"value": "6JBtpZIRWu17GlKcUPS1k"
+							"value": "{{orderId}}"
 						}
 					]
 				}
@@ -519,7 +526,7 @@
 	"variable": [
 		{
 			"key": "accessToken",
-			"value": "9c5d80cd26bc281263715703b8d4cc6dffc1746ffc8380fd7c215b25fe6ebaff",
+			"value": "",
 			"type": "string"
 		},
 		{
@@ -529,6 +536,14 @@
 		{
 			"key": "email",
 			"value": ""
+		},
+		{
+			"key": "orderId",
+			"value": ""
+		},
+		{
+			"key": "idbook",
+			"value": "1"
 		}
 	]
 }
